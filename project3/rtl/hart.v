@@ -133,4 +133,29 @@ module hart #(
     // Fill in your implementation here.
 endmodule
 
+// PC, instruction memory
+module fetch();
+
+endmodule
+
+// control unit, register file, immediate decoder
+module decode();
+
+endmodule
+
+// alu, branch/jump update
+module execute();
+
+endmodule
+
+// data memory
+module memory();
+
+endmodule
+
+
+module writeback();
+
+endmodule
+
 `default_nettype wire
