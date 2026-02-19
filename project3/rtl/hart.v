@@ -150,18 +150,44 @@ module execute(
     input wire [31:0] reg1
     input wire [31:0] reg2
     input wire [31:0] imm
-    
+    input wire ALUSrc
+    input wire [2:0] i_opsel
+    input wire i_sub
+    input wire i_unsigned
+    input wire i_arith
+    input wire MemRead1
+    output wire [31:0] o_result
+    output wire o_eq
+    output wire o_slt
+    output wire target_addr
+    output wire MemRead2
 );
 
 endmodule
 
 // data memory
-module memory();
+module memory(
+    input wire [31:0] o_result
+    input wire o_eq
+    input wire o_slt
+    input wire target_addr
+    input wire MemRead1
+    output wire [31:0] PC
+    output wire [31:0] read_data
+    output wire [31:0] read_alu
+    output wire MemRead2
+);
 
 endmodule
 
 
-module writeback();
+module writeback(
+    input wire [31:0] PC
+    input wire [31:0] read_data
+    input wire [31:0] read_alu
+    input wire MemRead
+    output wire [31:0] dest_result
+);
 
 endmodule
 
