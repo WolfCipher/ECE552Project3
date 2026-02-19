@@ -130,7 +130,6 @@ module hart #(
     ,`RVFI_OUTPUTS,
 `endif
 );
-    // Fill in your implementation here.
 
     // PC signals
     wire [31:0] PC_F_D, PC_D_X; // before adding 4
@@ -253,10 +252,8 @@ module memory(
     input wire i_MemtoReg,
     input wire i_MemWrite,
     input wire [4:0] i_rd_waddr,
-    input wire i_RegWrite,
-    output wire o_MemRead,
+    input wire i_RegWrite
     output wire o_MemtoReg,
-    output wire o_MemWrite,
     output wire [4:0] o_rd_waddr,
     output wire o_RegWrite
 );
@@ -268,9 +265,7 @@ module memory(
 
     // pass through stage
     assign read_alu = i_result;
-    assign o_MemRead = i_MemRead;
     assign o_MemtoReg = i_MemtoReg;
-    assign o_MemWrite = i_MemWrite;
     assign o_rd_waddr = i_rd_waddr;
     assign o_RegWrite = i_RegWrite;
 
@@ -283,7 +278,6 @@ module writeback(
     input wire [31:0] read_alu,
     output wire [31:0] dest_result,
     output wire [31:0] o_PC,
-    input wire i_MemRead,
     input wire i_MemtoReg,
     input wire [4:0] i_rd_waddr,
     input wire i_RegWrite
@@ -295,6 +289,37 @@ module writeback(
 
     // pass through stage
     assign o_PC = i_PC;
+
+endmodule
+
+module data_memory(
+    input wire i_clk,
+    input wire i_rst,
+    input wire i_MemRead,
+    input wire i_MemWrite,
+    input wire [31:0] i_addr,
+    input wire [31:0] i_data,
+    output wire [31:0] o_data
+);
+
+    reg [31:0] d_mem [31:0];
+
+    always @(posedge i_clk) begin
+        // handle active-high reset
+        // if (i_rst == 1) begin
+        //     for (i = 0; i < 32; i = i + 1)
+        //         reg_file[i] <= 32'd0;
+        // end
+
+        // only write if write enabled
+        if (i_MemWrite == 1)
+            d_mem[i_addr] <= i_data;
+
+        // only read if read enabled
+        if (i_MemRead == 1)
+            o_data <= d_mem[i_addr];
+
+    end
 
 endmodule
 
