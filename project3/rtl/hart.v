@@ -146,7 +146,12 @@ endmodule
 
 // alu, branch/jump update
 // DOES choose between immediate and register 2
-module execute();
+module execute(
+    input wire [31:0] reg1
+    input wire [31:0] reg2
+    input wire [31:0] imm
+    
+);
 
 endmodule
 
