@@ -1,6 +1,5 @@
-// define PC register
 
-module fetch_stage #(
+module fetch #(
     parameter RESET_ADDR = 32'h00000000
 ) (
     input i_rst, i_clk,
