@@ -130,31 +130,196 @@ module hart #(
     ,`RVFI_OUTPUTS,
 `endif
 );
-    // Fill in your implementation here.
+
+    // PC signals
+    wire [31:0] PC_F_D, PC_D_X; // before adding 4
+    wire [31:0] PC4_D_X, PC4_X_M, PC4_M_W, PC4_W_F; // after adding 4
+    wire[31:0] target_addr_X_M; // PC + target_addr
+
+    // Mux Signals
+    wire Jump_D_X, Jump_X_M;
+    wire BranchEqual_D_X, BranchEqual_X_M;
+    wire BranchLT_D_X, BranchLT_X_M;
+    wire MemRead_D_X, MemRead_X_M;
+    wire MemtoReg_D_X, MemtoReg_X_M, MemtoReg_M_W;
+    wire MemWrite_D_X, MemWrite_X_M;
+    wire RegWrite_D_X, RegWrite_X_M, RegWrite_M_W;
+    wire ALUSrc_D_X;
+
+    // Destination Address
+    wire rd_waddr_D_X, rd_waddr_X_M, rd_waddr_M_W;
+
+    // ALU result
+    wire [31:0] ALU_X_M, ALU_M_W;
+
+    // Signals just between decode and execute stages
+    wire [31:0] reg1, reg2, imm;
+    wire [2:0] i_opsel;
+    wire i_sub, i_unsigned, i_arith;
+
+    // Signals just between execute and memory
+    wire eq, slt;
+
 endmodule
 
 // PC, instruction memory
-module fetch();
+module fetch(
+);
 
 endmodule
 
 // control unit, register file, immediate decoder
-module decode();
+// does NOT choose between immediate and register 2
+module decode(
+);
 
 endmodule
 
 // alu, branch/jump update
-module execute();
+// DOES choose between immediate and register 2
+module execute(
+    input wire [31:0] reg1,
+    input wire [31:0] reg2,
+    input wire [31:0] imm,
+    input wire [2:0] i_opsel,
+    input wire i_sub,
+    input wire i_unsigned,
+    input wire i_arith,
+    input wire [31:0] i_PC,
+    input wire [31:0] i_PC4,
+    output wire [31:0] o_result,
+    output wire o_eq,
+    output wire o_slt,
+    output wire [31:0] target_addr,
+    output wire [31:0] o_PC4,
+    input wire i_ALUSrc,
+    input wire i_Jump,
+    input wire i_BranchEqual,
+    input wire i_BranchLT,
+    input wire i_MemRead,
+    input wire i_MemtoReg,
+    input wire i_MemWrite,
+    input wire [4:0] i_rd_waddr,
+    input wire i_RegWrite,
+    output wire o_Jump,
+    output wire o_BranchEqual,
+    output wire o_BranchLT,
+    output wire o_MemRead,
+    output wire o_MemtoReg,
+    output wire o_MemWrite,
+    output wire [4:0] o_rd_waddr,
+    output wire o_RegWrite
+);
+
+    // ALU
+    wire i_op1, i_op2;
+    assign i_op1 = reg1;
+    assign i_op2 = i_ALUSrc ? imm : reg2;
+    alu op (i_opsel, i_sub, i_unsigned, i_arith, i_op1, i_op2, o_result, o_eq, o_slt);
+
+    // branch or jump target address
+    assign target_addr = i_PC + imm;
+
+    // pass through stage
+    assign o_PC4 = i_PC4;
+    assign o_Jump = i_Jump;
+    assign o_BranchEqual = i_BranchEqual;
+    assign o_BranchLT = i_BranchLT;
+    assign o_MemRead = i_MemRead;
+    assign o_MemtoReg = i_MemtoReg;
+    assign o_MemWrite = i_MemWrite;
+    assign o_rd_waddr = i_rd_waddr;
+    assign o_RegWrite = i_RegWrite;
+
+
 
 endmodule
 
 // data memory
-module memory();
+module memory(
+    input wire [31:0] i_result,
+    input wire i_eq,
+    input wire i_slt,
+    input wire [31:0] target_addr,
+    input wire [31:0] i_PC,
+    output wire [31:0] o_PC,
+    output wire [31:0] read_data,
+    output wire [31:0] read_alu,
+    input wire i_Jump,
+    input wire i_BranchEqual,
+    input wire i_BranchLT,
+    input wire i_MemRead,
+    input wire i_MemtoReg,
+    input wire i_MemWrite,
+    input wire [4:0] i_rd_waddr,
+    input wire i_RegWrite
+    output wire o_MemtoReg,
+    output wire [4:0] o_rd_waddr,
+    output wire o_RegWrite
+);
+
+    // determine PC
+    assign o_PC = (i_BranchEqual & i_eq) | (i_BranchLT & i_slt) | (i_Jump) ? target_addr : i_PC;
+
+    // read and write data TODO
+
+    // pass through stage
+    assign read_alu = i_result;
+    assign o_MemtoReg = i_MemtoReg;
+    assign o_rd_waddr = i_rd_waddr;
+    assign o_RegWrite = i_RegWrite;
 
 endmodule
 
 
-module writeback();
+module writeback(
+    input wire [31:0] i_PC,
+    input wire [31:0] read_data,
+    input wire [31:0] read_alu,
+    output wire [31:0] dest_result,
+    output wire [31:0] o_PC,
+    input wire i_MemtoReg,
+    input wire [4:0] i_rd_waddr,
+    input wire i_RegWrite
+);
+    // determine value to write back
+    assign dest_result = i_MemtoReg ? read_data : read_alu;
+
+    // write back
+
+    // pass through stage
+    assign o_PC = i_PC;
+
+endmodule
+
+module data_memory(
+    input wire i_clk,
+    input wire i_rst,
+    input wire i_MemRead,
+    input wire i_MemWrite,
+    input wire [31:0] i_addr,
+    input wire [31:0] i_data,
+    output wire [31:0] o_data
+);
+
+    reg [31:0] d_mem [31:0];
+
+    always @(posedge i_clk) begin
+        // handle active-high reset
+        // if (i_rst == 1) begin
+        //     for (i = 0; i < 32; i = i + 1)
+        //         reg_file[i] <= 32'd0;
+        // end
+
+        // only write if write enabled
+        if (i_MemWrite == 1)
+            d_mem[i_addr] <= i_data;
+
+        // only read if read enabled
+        if (i_MemRead == 1)
+            o_data <= d_mem[i_addr];
+
+    end
 
 endmodule
 
