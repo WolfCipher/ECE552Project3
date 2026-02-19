@@ -139,11 +139,13 @@ module fetch();
 endmodule
 
 // control unit, register file, immediate decoder
+// does NOT choose between immediate and register 2
 module decode();
 
 endmodule
 
 // alu, branch/jump update
+// DOES choose between immediate and register 2
 module execute();
 
 endmodule
