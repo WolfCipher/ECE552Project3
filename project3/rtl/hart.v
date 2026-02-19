@@ -132,7 +132,12 @@ module hart #(
 );
     // Fill in your implementation here.
 
-    wire [31:0] PC_F_D, PC_D_X, PC_X_M, PC_M_W, PC_W_F;
+    // PC signals
+    wire [31:0] PC_F_D, PC_D_X; // before adding 4
+    wire [31:0] PC4_D_X, PC4_X_M, PC4_M_W, PC4_W_F; // after adding 4
+    wire[31:0] target_addr_X_M; // PC + target_addr
+
+    // Mux Signals
     wire Jump_D_X, Jump_X_M;
     wire BranchEqual_D_X, BranchEqual_X_M;
     wire BranchLT_D_X, BranchLT_X_M;
@@ -141,6 +146,20 @@ module hart #(
     wire MemWrite_D_X, MemWrite_X_M;
     wire RegWrite_D_X, RegWrite_X_M, RegWrite_M_W;
     wire ALUSrc_D_X;
+
+    // Destination Address
+    wire rd_waddr_D_X, rd_waddr_X_M, rd_waddr_M_W;
+
+    // ALU result
+    wire [31:0] ALU_X_M, ALU_M_W;
+
+    // Signals just between decode and execute stages
+    wire [31:0] reg1, reg2, imm;
+    wire [2:0] i_opsel;
+    wire i_sub, i_unsigned, i_arith;
+
+    // Signals just between execute and memory
+    wire eq, slt;
 
 endmodule
 
@@ -174,13 +193,13 @@ module execute(
     output wire o_slt,
     output wire [31:0] target_addr,
     output wire [31:0] o_PC4,
+    input wire i_ALUSrc,
     input wire i_Jump,
     input wire i_BranchEqual,
     input wire i_BranchLT,
     input wire i_MemRead,
     input wire i_MemtoReg,
     input wire i_MemWrite,
-    input wire i_ALUSrc,
     input wire [4:0] i_rd_waddr,
     input wire i_RegWrite,
     output wire o_Jump,
