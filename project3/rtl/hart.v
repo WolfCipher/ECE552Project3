@@ -157,28 +157,83 @@ module execute(
     input wire i_sub,
     input wire i_unsigned,
     input wire i_arith,
-    input wire MemRead1,
+    input wire [31:0] i_PC,
+    input wire [31:0] i_PC4,
+    input wire i_Jump,
+    input wire i_BranchEqual,
+    input wire i_BranchLT,
+    input wire i_MemRead,
+    input wire i_MemtoReg,
+    input wire i_MemWrite,
+    input wire [4:0] i_rd_waddr,
+    input wire i_rd_wen,
     output wire [31:0] o_result,
     output wire o_eq,
     output wire o_slt,
-    output wire target_addr,
-    output wire MemRead2
+    output wire [31:0] target_addr,
+    output wire [31:0] o_PC4,
+    output wire o_Jump,
+    output wire o_BranchEqual,
+    output wire o_BranchLT,
+    output wire o_MemRead,
+    output wire i_MemtoReg,
+    output wire o_MemWrite,
+    output wire [4:0] o_rd_waddr,
+    output wire o_rd_wen
 );
+
+    // ALU
+    wire i_op1, i_op2;
+    assign i_op1 = reg1;
+    assign i_op2 = ALUSrc ? imm : reg2;
+    alu op (i_opsel, i_sub, i_unsigned, i_arith, i_op1, i_op2, o_result, o_eq, o_slt);
+
+    // branch or jump target address
+    assign target_addr = i_PC + imm;
+
+    // pass through stage
+    assign o_PC4 = i_PC4;
+    assign o_MemRead = i_MemRead;
+    assign o_BranchEqual = i_BranchEqual;
+    assign o_BranchLT = i_BranchLT;
+    assign o_Jump = i_Jump;
+
 
 endmodule
 
 // data memory
 module memory(
-    input wire [31:0] o_result,
-    input wire o_eq,
-    input wire o_slt,
-    input wire target_addr,
-    input wire MemRead1,
-    output wire [31:0] PC,
+    input wire [31:0] i_result,
+    input wire i_eq,
+    input wire i_slt,
+    input wire [31:0] target_addr,
+    input wire [31:0] i_PC,
+    input wire i_Jump,
+    input wire i_BranchEqual,
+    input wire i_BranchLT,
+    input wire i_MemRead,
+    input wire i_MemtoReg,
+    input wire i_MemWrite,
+    input wire [4:0] i_rd_waddr,
+    input wire i_rd_wen,
+    output wire [31:0] o_PC,
     output wire [31:0] read_data,
     output wire [31:0] read_alu,
-    output wire MemRead2
+    output wire o_MemRead,
+    output wire o_MemtoReg,
+    output wire o_MemWrite,
+    output wire [4:0] o_rd_waddr,
+    output wire o_rd_wen
 );
+
+    // determine PC
+    assign o_PC = (i_BranchEqual & i_eq) | (i_BranchLT & i_slt) | (i_Jump) ? target_addr : i_PC;
+
+    // read and write data TODO
+
+    // pass through stage
+    assign read_alu = i_result;
+    assign o_MemRead = i_MemRead;
 
 endmodule
 
@@ -187,9 +242,20 @@ module writeback(
     input wire [31:0] i_PC,
     input wire [31:0] read_data,
     input wire [31:0] read_alu,
-    input wire MemRead,
-    output wire [31:0] dest_result
+    input wire i_MemRead,
+    input wire i_MemtoReg,
+    input wire [4:0] i_rd_waddr,
+    input wire i_rd_wen,
+    output wire [31:0] dest_result,
+    output wire [31:0] o_PC
 );
+    // determine value to write back
+    assign dest_result = i_MemtoReg ? read_data : read_alu;
+
+    // write back
+
+    // pass through stage
+    assign o_PC = i_PC;
 
 endmodule
 
