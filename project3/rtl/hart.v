@@ -132,7 +132,15 @@ module hart #(
 );
     // Fill in your implementation here.
 
-    
+    wire [31:0] PC_F_D, PC_D_X, PC_X_M, PC_M_W, PC_W_F;
+    wire Jump_D_X, Jump_X_M;
+    wire BranchEqual_D_X, BranchEqual_X_M;
+    wire BranchLT_D_X, BranchLT_X_M;
+    wire MemRead_D_X, MemRead_X_M;
+    wire MemtoReg_D_X, MemtoReg_X_M, MemtoReg_M_W;
+    wire MemWrite_D_X, MemWrite_X_M;
+    wire RegWrite_D_X, RegWrite_X_M, RegWrite_M_W;
+    wire ALUSrc_D_X;
 
 endmodule
 
