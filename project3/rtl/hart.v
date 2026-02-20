@@ -144,6 +144,8 @@ module hart #(
     wire MemtoReg_D_X, MemtoReg_X_M, MemtoReg_M_W;
     wire MemWrite_D_X, MemWrite_X_M;
     wire RegWrite_D_X, RegWrite_X_M, RegWrite_M_W;
+    wire UpperType_D_X;
+    wire IsUInstruct_D_X, IsUInstruct_X_M, IsUInstruct_M_W;
     wire ALUSrc_D_X;
 
     // Destination Address
@@ -201,6 +203,8 @@ module execute(
     input wire i_MemWrite,
     input wire [4:0] i_rd_waddr,
     input wire i_RegWrite,
+    input wire i_UpperType,
+    input wire i_IsUInstruct,
     output wire o_Jump,
     output wire o_BranchEqual,
     output wire o_BranchLT,
@@ -208,7 +212,9 @@ module execute(
     output wire o_MemtoReg,
     output wire o_MemWrite,
     output wire [4:0] o_rd_waddr,
-    output wire o_RegWrite
+    output wire o_RegWrite,
+    output wire o_IsUInstruct,
+    output wire [31:0] o_uimm
 );
 
     // ALU
@@ -220,6 +226,9 @@ module execute(
     // branch or jump target address
     assign target_addr = i_PC + imm;
 
+    // U-type immediate
+    assign o_uimm = i_UpperType ? imm + i_PC : imm;
+
     // pass through stage
     assign o_PC4 = i_PC4;
     assign o_Jump = i_Jump;
@@ -230,6 +239,7 @@ module execute(
     assign o_MemWrite = i_MemWrite;
     assign o_rd_waddr = i_rd_waddr;
     assign o_RegWrite = i_RegWrite;
+    assign o_IsUInstruct = i_IsUInstruct;
 
 endmodule
 
@@ -251,10 +261,14 @@ module memory(
     input wire i_MemtoReg,
     input wire i_MemWrite,
     input wire [4:0] i_rd_waddr,
-    input wire i_RegWrite
+    input wire i_RegWrite,
+    input wire i_IsUInstruct,
+    input wire [31:0] i_uimm,
     output wire o_MemtoReg,
     output wire [4:0] o_rd_waddr,
-    output wire o_RegWrite
+    output wire o_RegWrite,
+    output wire o_IsUInstruct,
+    output wire [31:0] o_uimm
 );
 
     // determine PC
@@ -268,6 +282,8 @@ module memory(
     assign o_MemtoReg = i_MemtoReg;
     assign o_rd_waddr = i_rd_waddr;
     assign o_RegWrite = i_RegWrite;
+    assign o_IsUInstruct = i_IsUInstruct;
+    assign o_uimm = i_uimm;
 
 endmodule
 
@@ -280,10 +296,12 @@ module writeback(
     output wire [31:0] o_PC,
     input wire i_MemtoReg,
     input wire [4:0] i_rd_waddr,
-    input wire i_RegWrite
+    input wire i_RegWrite,
+    input wire i_IsUInstruct,
+    input wire [31:0] i_uimm
 );
     // determine value to write back
-    assign dest_result = i_MemtoReg ? read_data : read_alu;
+    assign dest_result = i_IsUInstruct ? i_uimm : (i_MemtoReg ? read_data : read_alu);
 
     // write back
 
@@ -294,6 +312,7 @@ endmodule
 
 module data_memory(
     input wire i_clk,
+    input wire [3:0] mask,
     //input wire i_rst,
     input wire i_MemRead,
     input wire i_MemWrite,
