@@ -134,7 +134,7 @@ module hart #(
     // PC signals
     wire [31:0] PC_F_D, PC_D_X; // before adding 4
     wire [31:0] PC4_D_X, PC4_X_M, PC4_M_W, PC4_W_F; // after adding 4
-    wire[31:0] target_addr_X_M; // PC + target_addr
+    wire [31:0] target_addr_X_M; // PC + target_addr
 
     // Mux Signals
     wire Jump_D_X, Jump_X_M;
@@ -149,10 +149,12 @@ module hart #(
     wire ALUSrc_D_X;
 
     // Destination Address
-    wire rd_waddr_D_X, rd_waddr_X_M, rd_waddr_M_W;
+    wire [4:0] rd_waddr_D_X, rd_waddr_X_M, rd_waddr_M_W;
 
-    // ALU result
+    // ALU result, U type result, memory result
     wire [31:0] ALU_X_M, ALU_M_W;
+    wire [31:0] uimm_X_M, uimm_M_W;
+    wire [31:0] mem_read_M_W;
 
     // Signals just between decode and execute stages
     wire [31:0] reg1, reg2, imm;
@@ -160,7 +162,46 @@ module hart #(
     wire i_sub, i_unsigned, i_arith;
 
     // Signals just between execute and memory
-    wire eq, slt;
+    wire eq, slt, mem_unsigned;
+    wire [3:0] mask;
+    wire [31:0] mem_addr, reg2_X_M;
+
+    execute x (
+        // ALU inputs
+        reg1, reg2, imm, i_opsel, i_sub, i_unsigned, i_arith,
+        // signals related to PC, branch, and ALU
+        PC_D_X, PC4_D_X, ALU_X_M, eq, slt, target_addr_X_M, PC4_X_M,
+        // signals for proper memory access
+        mem_unsigned, mask, mem_addr, reg2_X_M,
+        // input mux signals
+        ALUSrc_D_X, Jump_D_X, BranchEqual_D_X, BranchLT_D_X,
+        MemRead_D_X, MemtoReg_D_X, MemWrite_D_X, rd_waddr_D_X,
+        RegWrite_D_X, UpperType_D_X, IsUInstruct_D_X,
+        // output mux signals
+        Jump_X_M, BranchEqual_X_M, BranchLT_X_M,
+        MemRead_X_M, MemtoReg_X_M, MemWrite_X_M,
+        rd_waddr_X_M, RegWrite_X_M, IsUInstruct_X_M,
+        // U type result
+        uimm_X_M
+    );
+
+    memory m (
+        // signals sent to data memory
+        i_clk, mask, mem_unsigned, mem_addr, reg2_X_M,
+        // ALU signal
+        ALU_X_M,
+        // Branch and PC signals
+        eq, slt, target_addr_X_M, PC4_X_M, PC4_M_W,
+        // Results to choose between in WB stage
+        mem_read_M_W, ALU_M_W, uimm_M_W,
+        // input Mux signals
+        Jump_X_M, BranchEqual_X_M, BranchLT_X_M,
+        MemRead_X_M, MemtoReg_X_M, MemWrite_X_M,
+        rd_waddr_X_M, RegWrite_X_M, IsUInstruct_X_M,
+        uimm_X_M,
+        // output Mux signals
+        MemtoReg_M_W, rd_waddr_M_W, RegWrite_M_W, IsUInstruct_M_W
+    );
 
 endmodule
 

@@ -1,16 +1,24 @@
 // data memory
 module memory(
+    // signals sent to data memory
     input wire i_clk,
     input wire [3:0] i_mask,
     input wire i_unsigned,
+    input wire [31:0] i_mem_addr,
+    input wire [31:0] i_reg2,
+    // ALU signal
     input wire [31:0] i_result,
+    // Branch and PC signals
     input wire i_eq,
     input wire i_slt,
     input wire [31:0] target_addr,
     input wire [31:0] i_PC,
     output wire [31:0] o_PC,
+    // Results to choose between in WB stage
     output wire [31:0] read_data,
     output wire [31:0] read_alu,
+    output wire [31:0] o_uimm,
+    // input Mux signals
     input wire i_Jump,
     input wire i_BranchEqual,
     input wire i_BranchLT,
@@ -21,18 +29,18 @@ module memory(
     input wire i_RegWrite,
     input wire i_IsUInstruct,
     input wire [31:0] i_uimm,
+    // output Mux signals
     output wire o_MemtoReg,
     output wire [4:0] o_rd_waddr,
     output wire o_RegWrite,
-    output wire o_IsUInstruct,
-    output wire [31:0] o_uimm
+    output wire o_IsUInstruct
 );
 
     // determine PC
     assign o_PC = (i_BranchEqual & i_eq) | (i_BranchLT & i_slt) | (i_Jump) ? target_addr : i_PC;
 
     // read and write data TODO
-    data_memory dmem (i_clk, i_mask, i_unsigned, i_MemRead, i_MemWrite, read_alu, reg2, i_MemtoR)
+    data_memory dmem (i_clk, i_mask, i_unsigned, i_MemRead, i_MemWrite, i_mem_addr, i_reg2, i_MemtoR)
 
     // pass through stage
     assign read_alu = i_result;

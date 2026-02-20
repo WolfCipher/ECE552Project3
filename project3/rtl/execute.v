@@ -1,6 +1,7 @@
 // alu, branch/jump update
 // DOES choose between immediate and register 2
 module execute(
+    // ALU inputs
     input wire [31:0] reg1,
     input wire [31:0] reg2,
     input wire [31:0] imm,
@@ -8,6 +9,7 @@ module execute(
     input wire i_sub,
     input wire i_unsigned,
     input wire i_arith,
+    // signals related to PC, branch, and ALU
     input wire [31:0] i_PC,
     input wire [31:0] i_PC4,
     output wire [31:0] o_result,
@@ -15,9 +17,12 @@ module execute(
     output wire o_slt,
     output wire [31:0] target_addr,
     output wire [31:0] o_PC4,
+    // signals for proper memory access
     output wire o_unsigned, // for memory
-    output wire o_mask, // for memory
+    output wire [3:0] o_mask, // for memory
     output wire [31:0] mem_addr, // for memory; different from o_result if not working with a word
+    output wire [31:0] o_reg2,
+    // input mux signals
     input wire i_ALUSrc,
     input wire i_Jump,
     input wire i_BranchEqual,
@@ -29,6 +34,7 @@ module execute(
     input wire i_RegWrite,
     input wire i_UpperType,
     input wire i_IsUInstruct,
+    // output mux signals
     output wire o_Jump,
     output wire o_BranchEqual,
     output wire o_BranchLT,
@@ -38,6 +44,7 @@ module execute(
     output wire [4:0] o_rd_waddr,
     output wire o_RegWrite,
     output wire o_IsUInstruct,
+    // U type result
     output wire [31:0] o_uimm
 );
 
@@ -82,6 +89,7 @@ module execute(
     assign o_rd_waddr = i_rd_waddr;
     assign o_RegWrite = i_RegWrite;
     assign o_IsUInstruct = i_IsUInstruct;
+    assign o_reg2 = reg2;
 
 endmodule
 
