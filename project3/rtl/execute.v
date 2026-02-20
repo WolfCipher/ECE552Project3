@@ -15,6 +15,9 @@ module execute(
     output wire o_slt,
     output wire [31:0] target_addr,
     output wire [31:0] o_PC4,
+    output wire o_unsigned, // for memory
+    output wire o_mask, // for memory
+    output wire [31:0] mem_addr, // for memory; different from o_result if not working with a word
     input wire i_ALUSrc,
     input wire i_Jump,
     input wire i_BranchEqual,
@@ -49,6 +52,24 @@ module execute(
 
     // U-type immediate
     assign o_uimm = i_UpperType ? imm + i_PC : imm;
+
+    // mask decoder
+    assign o_unsigned = i_opsel[2];
+    assign o_mask = (i_opsel[1:0] == 2'b00) ? (
+                        (o_result[1:0] == 2'b00) ? 4'b0001 :
+                        (o_result[1:0] == 2'b01) ? 4'b0010 :
+                        (o_result[1:0] == 2'b10) ? 4'b0100 :
+                        4'b1000
+                    ) : // byte
+                    (i_opsel[1:0] == 2'b01) ? (
+                        (o_result[1:0] == 2'b00) ? 4'b0011 :
+                        //(o_result[1:0] == 2'b01) ? 4'b0110 :
+                        (o_result[1:0] == 2'b10) ? 4'b1100 :
+                        //(o_result[1:0] == 2'b11) ? 4'b1001 :
+                        4'bxxxx
+                    ) : // halfword
+                    4'b1111 // word
+    assign mem_addr = {o_result[31:2], 2'b00};
 
     // pass through stage
     assign o_PC4 = i_PC4;

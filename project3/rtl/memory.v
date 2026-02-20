@@ -1,6 +1,8 @@
 // data memory
 module memory(
     input wire i_clk,
+    input wire [3:0] i_mask,
+    input wire i_unsigned,
     input wire [31:0] i_result,
     input wire i_eq,
     input wire i_slt,
@@ -30,7 +32,7 @@ module memory(
     assign o_PC = (i_BranchEqual & i_eq) | (i_BranchLT & i_slt) | (i_Jump) ? target_addr : i_PC;
 
     // read and write data TODO
-    data_memory dmem (i_clk, i_MemRead, i_MemWrite, read_alu, reg2, i_MemtoR)
+    data_memory dmem (i_clk, i_mask, i_unsigned, i_MemRead, i_MemWrite, read_alu, reg2, i_MemtoR)
 
     // pass through stage
     assign read_alu = i_result;
