@@ -231,12 +231,11 @@ module execute(
     assign o_rd_waddr = i_rd_waddr;
     assign o_RegWrite = i_RegWrite;
 
-
-
 endmodule
 
 // data memory
 module memory(
+    input wire i_clk,
     input wire [31:0] i_result,
     input wire i_eq,
     input wire i_slt,
@@ -262,6 +261,7 @@ module memory(
     assign o_PC = (i_BranchEqual & i_eq) | (i_BranchLT & i_slt) | (i_Jump) ? target_addr : i_PC;
 
     // read and write data TODO
+    data_memory dmem (i_clk, i_MemRead, i_MemWrite, read_alu, reg2, i_MemtoR)
 
     // pass through stage
     assign read_alu = i_result;
@@ -294,7 +294,7 @@ endmodule
 
 module data_memory(
     input wire i_clk,
-    input wire i_rst,
+    //input wire i_rst,
     input wire i_MemRead,
     input wire i_MemWrite,
     input wire [31:0] i_addr,
