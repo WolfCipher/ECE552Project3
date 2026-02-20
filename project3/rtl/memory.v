@@ -84,6 +84,12 @@ module data_memory(
                     (mask == 4'b1000) ? {{24{sign_bit}}, masked_data[31:24]} :
 
     // ****** WRITE *******
+    wire [31:0] shift_data;
+    assign shift_data = (mask == 4'bxxx1) ? i_data :
+                        (mask == 4'bxx10) ? {i_data[23:0], 8'd0} :
+                        (mask == 4'bx100) ? {i_data[15:0], 16'd0} :
+                        (mask == 4'b1000) ? {i_data[7:0], 24'd0} :
+
     always @(posedge i_clk) begin
         // handle active-high reset
         // if (i_rst == 1) begin
@@ -93,7 +99,14 @@ module data_memory(
 
         // only write if write enabled
         if (i_MemWrite == 1)
-            d_mem[i_addr] <= i_data;
+            if (mask[3] == 1)
+                d_mem[i_addr][31:24] <= shift_data[31:24]
+            if (mask[2] == 1)
+                d_mem[i_addr][23:16] <= shift_data[23:16]
+            if (mask[1] == 1)
+                d_mem[i_addr][15:8] <= shift_data[15:8]
+            if (mask[0] == 1)
+                d_mem[i_addr][7:0] <= shift_data[7:0]
 
     end
 
