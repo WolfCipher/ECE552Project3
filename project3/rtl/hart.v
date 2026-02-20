@@ -140,9 +140,9 @@ module hart #(
     wire Jump_D_X, Jump_X_M;
     wire BranchEqual_D_X, BranchEqual_X_M;
     wire BranchLT_D_X, BranchLT_X_M;
-    wire MemRead_D_X, MemRead_X_M;
+    wire MemRead_D_X, MemRead_X_M; // TODO: replace last signal with o_dmem_ren
     wire MemtoReg_D_X, MemtoReg_X_M, MemtoReg_M_W;
-    wire MemWrite_D_X, MemWrite_X_M;
+    wire MemWrite_D_X, MemWrite_X_M; // TODO: replace last signal with o_dmem_wen
     wire RegWrite_D_X, RegWrite_X_M, RegWrite_M_W;
     wire UpperType_D_X;
     wire IsUInstruct_D_X, IsUInstruct_X_M, IsUInstruct_M_W;
@@ -154,7 +154,7 @@ module hart #(
     // ALU result, U type result, memory result
     wire [31:0] ALU_X_M, ALU_M_W;
     wire [31:0] uimm_X_M, uimm_M_W;
-    wire [31:0] mem_read_M_W;
+    wire [31:0] mem_read_M_W; // TODO replace with i_dem_rdata
 
     // Signals just between decode and execute stages
     wire [31:0] reg1, reg2, imm;
@@ -163,9 +163,15 @@ module hart #(
 
     // Signals just between execute and memory
     wire eq, slt, mem_unsigned;
-    wire [3:0] mask;
-    wire [31:0] mem_addr, reg2_X_M;
+    wire [3:0] mask; // TODO replace with o_dem_mask
+    wire [31:0] mem_addr, reg2_X_M; // TODO replace with o_dem_addr, o_dem_wdata
 
+    // **** HANDLE RETIRE *******
+    // for single-cycle implementations, o_retire_valid will always be 1
+    assign o_retire_valid = 1;
+    // TODO take action if the retired instruction is valid
+
+    // ***** BUILD CONNECTIONS *****
     execute x (
         // ALU inputs
         reg1, reg2, imm, i_opsel, i_sub, i_unsigned, i_arith,
