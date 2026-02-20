@@ -45,6 +45,7 @@ endmodule
 module data_memory(
     input wire i_clk,
     input wire [3:0] mask,
+    input wire i_unsigned,
     //input wire i_rst,
     input wire i_MemRead,
     input wire i_MemWrite,
@@ -55,6 +56,34 @@ module data_memory(
 
     reg [31:0] d_mem [31:0];
 
+    // ****** READ *******
+    // only read if read-enabled
+    // select bytes using the mask
+    wire [31:0] data, masked_data;
+    assign data = i_MemRead ? d_mem[i_addr] : 32'hxxxxxxxx;
+    assign masked_data[31:24] = data[31:24] & {8{mask[3]}};
+    assign masked_data[23:16] = data[23:16] & {8{mask[2]}};
+    assign masked_data[15:8] = data[15:8] & {8{mask[1]}};
+    assign masked_data[7:0] = data[7:0] & {8{mask[0]}};
+
+    // handle any needed shifts
+    wire sign_bit;
+
+    assign sign_bit = i_unsigned ? (
+                      (mask == 4'1xxx) ? masked_data[31] :
+                      (mask == 4'01xx) ? masked_data[23] :
+                      (mask == 4'001x) ? masked_data[15] :
+                      masked_data[7]
+                      ) : 0;
+
+    assign o_data = (mask == 4'b1111) ? masked_data :
+                    (mask == 4'b0011) ? {{16{sign_bit}}, masked_data[15:0]} :
+                    (mask == 4'b0001) ? {{24{sign_bit}}, masked_data[7:0]} :
+                    (mask == 4'b0110) ? {{16{sign_bit}}, masked_data[23:8]} :
+                    (mask == 4'b1100) ? {{16{sign_bit}}, masked_data[31:16]} :
+                    (mask == 4'b1000) ? {{24{sign_bit}}, masked_data[31:24]} :
+
+    // ****** WRITE *******
     always @(posedge i_clk) begin
         // handle active-high reset
         // if (i_rst == 1) begin
@@ -65,10 +94,6 @@ module data_memory(
         // only write if write enabled
         if (i_MemWrite == 1)
             d_mem[i_addr] <= i_data;
-
-        // only read if read enabled
-        if (i_MemRead == 1)
-            o_data <= d_mem[i_addr];
 
     end
 
