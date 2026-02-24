@@ -21,6 +21,7 @@ module execute(
     output wire o_unsigned, // for memory
     output wire [3:0] o_mask, // for memory
     output wire [31:0] mem_addr, // for memory; different from o_result if not working with a word
+    output wire [31:0] mem_wdata
     output wire [31:0] o_reg2,
     // input mux signals
     input wire i_ALUSrc,
@@ -47,7 +48,9 @@ module execute(
     output wire o_RegWrite,
     output wire o_IsUInstruct,
     // U type result
-    output wire [31:0] o_uimm
+    output wire [31:0] o_uimm,
+    // Trap Check
+    output wire o_trap
 );
 
     // ALU
@@ -55,6 +58,8 @@ module execute(
     assign i_op1 = reg1;
     assign i_op2 = i_ALUSrc ? imm : reg2;
     alu op (i_opsel, i_sub, i_unsigned, i_arith, i_op1, i_op2, o_result, o_eq, o_slt);
+
+    assign mem_wdata = o_result;
 
     // branch or jump target address
     assign target_addr = i_isJALR ? (reg1 + imm) : (i_PC + imm);
@@ -79,6 +84,9 @@ module execute(
                     ) : // halfword
                     4'b1111 // word
     assign mem_addr = {o_result[31:2], 2'b00};
+
+    // trap check
+    assign o_trap = (mem_addr[1:0] != 2'b00) || (target_addr != 2'b00);
 
     // pass through stage
     assign o_PC4 = i_PC4;

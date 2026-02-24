@@ -170,9 +170,19 @@ module hart #(
     // **** HANDLE RETIRE *******
     // for single-cycle implementations, o_retire_valid will always be 1
     assign o_retire_valid = 1;
+    
+    // check for traps in stages where we can find a bad instruction and bad addresses
+    wire trap_D, trap_X;
+    assign o_retire_trap = trap_D | trap_X;
+
+    // TODO:
+    // o_retire_instruct is computed in decode
+    // o_retire_halt is computed in decode
+    //
+
     // TODO take action if the retired instruction is valid
-    wire next_pc;
-    assign next_pc = o_retire_valid ? o_retire_next_pc : 32'd0; // TODO: what should default value be?
+    // wire next_pc;
+    // assign next_pc = o_retire_valid ? o_retire_next_pc : 32'd0; // TODO: what should default value be?
     
 
     // ***** BUILD CONNECTIONS *****
@@ -182,17 +192,19 @@ module hart #(
         // signals related to PC, branch, and ALU
         PC_D_X, PC4_D_X, ALU_X_M, eq, slt, target_addr_X_M, PC4_X_M,
         // signals for proper memory access
-        mem_unsigned, mask, mem_addr, reg2_X_M,
+        mem_unsigned, o_dmem_mask, o_dmem_addr, o_dmem_wdata, reg2_X_M,
         // input mux signals
         ALUSrc_D_X, isJALR_D_X, Jump_D_X, BranchEqual_D_X, BranchLT_D_X,
-        MemRead_D_X, MemtoReg_D_X, MemWrite_D_X, rd_waddr_D_X,
+        MemRead_D_X, MemtoReg_D_X, o_dmem_wen, rd_waddr_D_X,
         RegWrite_D_X, UpperType_D_X, IsUInstruct_D_X,
         // output mux signals
         isJALR_X_M, Jump_X_M, BranchEqual_X_M, BranchLT_X_M,
         MemRead_X_M, MemtoReg_X_M, MemWrite_X_M,
         rd_waddr_X_M, RegWrite_X_M, IsUInstruct_X_M,
         // U type result
-        uimm_X_M
+        uimm_X_M,
+        // trap check
+        trap_X
     );
 
     memory m (

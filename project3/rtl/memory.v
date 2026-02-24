@@ -45,7 +45,7 @@ module memory(
     assign o_PC = (i_BranchEqual & i_eq) | (i_BranchLT & i_slt) | (i_Jump) ? muxed_target : i_PC;
 
     // read and write data TODO
-    data_memory dmem (i_clk, i_mask, i_unsigned, i_MemRead, i_MemWrite, i_mem_addr, i_reg2, i_MemtoR)
+    //data_memory dmem (i_clk, i_mask, i_unsigned, i_MemRead, i_MemWrite, i_mem_addr, i_reg2, i_MemtoR)
 
     // pass through stage
     assign read_alu = i_result;
