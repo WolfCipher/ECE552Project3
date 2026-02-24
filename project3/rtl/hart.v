@@ -187,7 +187,24 @@ module hart #(
     // TODO take action if the retired instruction is valid
     // wire next_pc;
     // assign next_pc = o_retire_valid ? o_retire_next_pc : 32'd0; // TODO: what should default value be?
-    
+
+    // Additional wires
+    wire [31:0] branch_target;  // never declared
+    wire        branch_taken;   // never declared
+    wire [31:0] instruction;    // never declared
+
+    fetch #(RESET_ADDR) fetch_inst (
+        i_clk,
+        i_rst,
+        branch_target,
+        branch_taken,
+        pc,
+        i_imem_rdata,
+        PC_F_D,
+        instruction,
+    );
+
+
     decode x (
         i_imem_rdata,
         Jump_D_X,
@@ -270,7 +287,7 @@ module writeback(
     input i_isJALR,
     input wire i_MemtoReg,
     input wire [4:0] i_rd_waddr,
-    input wire i_RegWrite,
+    input wire i_RegWrite,s
     input wire i_IsUInstruct,
     // output signals
     output wire o_RegWrite,
