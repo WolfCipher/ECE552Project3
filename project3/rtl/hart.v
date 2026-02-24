@@ -137,7 +137,8 @@ module hart #(
     wire [31:0] target_addr_X_M; // PC + target_addr
 
     // Mux Signals
-    wire Jump_D_X, Jump_X_M;
+    wire isJALR_D_X, isJALR_X_M;
+    wire Jump_D_X, Jump_X_M, Jump_M_W;
     wire BranchEqual_D_X, BranchEqual_X_M;
     wire BranchLT_D_X, BranchLT_X_M;
     wire MemRead_D_X, MemRead_X_M; // TODO: replace last signal with o_dmem_ren
@@ -170,6 +171,9 @@ module hart #(
     // for single-cycle implementations, o_retire_valid will always be 1
     assign o_retire_valid = 1;
     // TODO take action if the retired instruction is valid
+    wire next_pc;
+    assign next_pc = o_retire_valid ? o_retire_next_pc : 32'd0; // TODO: what should default value be?
+    
 
     // ***** BUILD CONNECTIONS *****
     execute x (
@@ -180,11 +184,11 @@ module hart #(
         // signals for proper memory access
         mem_unsigned, mask, mem_addr, reg2_X_M,
         // input mux signals
-        ALUSrc_D_X, Jump_D_X, BranchEqual_D_X, BranchLT_D_X,
+        ALUSrc_D_X, isJALR_D_X, Jump_D_X, BranchEqual_D_X, BranchLT_D_X,
         MemRead_D_X, MemtoReg_D_X, MemWrite_D_X, rd_waddr_D_X,
         RegWrite_D_X, UpperType_D_X, IsUInstruct_D_X,
         // output mux signals
-        Jump_X_M, BranchEqual_X_M, BranchLT_X_M,
+        isJALR_X_M, Jump_X_M, BranchEqual_X_M, BranchLT_X_M,
         MemRead_X_M, MemtoReg_X_M, MemWrite_X_M,
         rd_waddr_X_M, RegWrite_X_M, IsUInstruct_X_M,
         // U type result
@@ -201,35 +205,42 @@ module hart #(
         // Results to choose between in WB stage
         mem_read_M_W, ALU_M_W, uimm_M_W,
         // input Mux signals
-        Jump_X_M, BranchEqual_X_M, BranchLT_X_M,
+        isJALR_X_M, Jump_X_M, BranchEqual_X_M, BranchLT_X_M,
         MemRead_X_M, MemtoReg_X_M, MemWrite_X_M,
         rd_waddr_X_M, RegWrite_X_M, IsUInstruct_X_M,
         uimm_X_M,
         // output Mux signals
-        MemtoReg_M_W, rd_waddr_M_W, RegWrite_M_W, IsUInstruct_M_W
+        isJALR_M_W, MemtoReg_M_W, rd_waddr_M_W, RegWrite_M_W, IsUInstruct_M_W
     );
 
 endmodule
 
 module writeback(
     input wire [31:0] i_PC,
+    // results to choose between
     input wire [31:0] read_data,
     input wire [31:0] read_alu,
+    input wire [31:0] i_uimm,
     output wire [31:0] dest_result,
     output wire [31:0] o_PC,
+    // input mux signals
+    input i_isJALR,
     input wire i_MemtoReg,
     input wire [4:0] i_rd_waddr,
     input wire i_RegWrite,
     input wire i_IsUInstruct,
-    input wire [31:0] i_uimm
+    // output signals
+    output wire o_RegWrite,
+    output wire [4:0] o_rd_waddr
 );
     // determine value to write back
     assign dest_result = i_IsUInstruct ? i_uimm : (i_MemtoReg ? read_data : read_alu);
 
-    // write back
-
-    // pass through stage
+    // pass through stage - write back is handled via connections in hart
+    // remember, writing occurs before reading in decode cycle
     assign o_PC = i_PC;
+    assign o_RegWrite = i_RegWrite;
+    assign o_rd_waddr = i_rd_waddr;
 
 endmodule
 

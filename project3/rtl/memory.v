@@ -19,6 +19,7 @@ module memory(
     output wire [31:0] read_alu,
     output wire [31:0] o_uimm,
     // input Mux signals
+    input wire i_isJALR,
     input wire i_Jump,
     input wire i_BranchEqual,
     input wire i_BranchLT,
@@ -30,6 +31,7 @@ module memory(
     input wire i_IsUInstruct,
     input wire [31:0] i_uimm,
     // output Mux signals
+    output wire o_isJALR,
     output wire o_MemtoReg,
     output wire [4:0] o_rd_waddr,
     output wire o_RegWrite,
@@ -37,13 +39,17 @@ module memory(
 );
 
     // determine PC
-    assign o_PC = (i_BranchEqual & i_eq) | (i_BranchLT & i_slt) | (i_Jump) ? target_addr : i_PC;
+    wire muxed_target;
+    assign muxed_target = i_isJALR ? {target_addr[31:1], 1'b0} : target_addr;
+
+    assign o_PC = (i_BranchEqual & i_eq) | (i_BranchLT & i_slt) | (i_Jump) ? muxed_target : i_PC;
 
     // read and write data TODO
     data_memory dmem (i_clk, i_mask, i_unsigned, i_MemRead, i_MemWrite, i_mem_addr, i_reg2, i_MemtoR)
 
     // pass through stage
     assign read_alu = i_result;
+    assign o_isJALR = i_isJALR;
     assign o_MemtoReg = i_MemtoReg;
     assign o_rd_waddr = i_rd_waddr;
     assign o_RegWrite = i_RegWrite;

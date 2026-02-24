@@ -24,6 +24,7 @@ module execute(
     output wire [31:0] o_reg2,
     // input mux signals
     input wire i_ALUSrc,
+    input wire i_isJALR,
     input wire i_Jump,
     input wire i_BranchEqual,
     input wire i_BranchLT,
@@ -35,6 +36,7 @@ module execute(
     input wire i_UpperType,
     input wire i_IsUInstruct,
     // output mux signals
+    output wire i_isJALR,
     output wire o_Jump,
     output wire o_BranchEqual,
     output wire o_BranchLT,
@@ -55,10 +57,10 @@ module execute(
     alu op (i_opsel, i_sub, i_unsigned, i_arith, i_op1, i_op2, o_result, o_eq, o_slt);
 
     // branch or jump target address
-    assign target_addr = i_PC + imm;
+    assign target_addr = i_isJALR ? (reg1 + imm) : (i_PC + imm);
 
     // U-type immediate
-    assign o_uimm = i_UpperType ? imm + i_PC : imm;
+    assign o_uimm = i_UpperType ? target_addr : imm; // target_addr = i_PC + imm
 
     // mask decoder
     assign o_unsigned = i_opsel[2];
@@ -80,6 +82,7 @@ module execute(
 
     // pass through stage
     assign o_PC4 = i_PC4;
+    assign o_isJALR = i_isJALR;
     assign o_Jump = i_Jump;
     assign o_BranchEqual = i_BranchEqual;
     assign o_BranchLT = i_BranchLT;
