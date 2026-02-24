@@ -141,6 +141,7 @@ module hart #(
     wire Jump_D_X, Jump_X_M, Jump_M_W;
     wire BranchEqual_D_X, BranchEqual_X_M;
     wire BranchLT_D_X, BranchLT_X_M;
+    wire Branch_D_X, Branch_X_M;
     wire MemRead_D_X, MemRead_X_M; // TODO: replace last signal with o_dmem_ren
     wire MemtoReg_D_X, MemtoReg_X_M, MemtoReg_M_W;
     wire MemWrite_D_X, MemWrite_X_M; // TODO: replace last signal with o_dmem_wen
@@ -151,6 +152,9 @@ module hart #(
 
     // Destination Address
     wire [4:0] rd_waddr_D_X, rd_waddr_X_M, rd_waddr_M_W;
+
+    //register access signals
+    wire i_reg_write_en, i_reg_write_addr, i_reg_write_data;
 
     // ALU result, U type result, memory result
     wire [31:0] ALU_X_M, ALU_M_W;
@@ -184,6 +188,33 @@ module hart #(
     // wire next_pc;
     // assign next_pc = o_retire_valid ? o_retire_next_pc : 32'd0; // TODO: what should default value be?
     
+    decode x (
+        i_imem_rdata,
+        Jump_D_X,
+        BranchEqual_D_X,
+        BranchLT_D_X,
+        Branch_D_X,
+        MemRead_D_X,
+        MemWrite_D_X,
+        MemtoReg_D_X,
+        ALUSrc_D_X, //1 if reg 0 if imm
+        RegWrite_D_X,
+        reg1,
+        reg2,
+        imm,
+        i_opsel,
+        i_sub,
+        i_unsigned,
+        i_arith,
+        i_clk,
+        i_reg_write_en,
+        i_reg_write_addr,
+        i_reg_write_data
+
+    );
+
+
+
 
     // ***** BUILD CONNECTIONS *****
     execute x (
