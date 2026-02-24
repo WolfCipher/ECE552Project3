@@ -54,7 +54,7 @@ module execute(
 );
 
     // ALU
-    wire i_op1, i_op2;
+    wire [31:0] i_op1, i_op2;
     assign i_op1 = reg1;
     assign i_op2 = i_ALUSrc ? imm : reg2;
     alu op (i_opsel, i_sub, i_unsigned, i_arith, i_op1, i_op2, o_result, o_eq, o_slt);
