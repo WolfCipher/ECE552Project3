@@ -131,6 +131,8 @@ module hart #(
 `endif
 );
 
+    wire [31:0] pc;
+
     // PC signals
     wire [31:0] PC_F_D, PC_D_X; // before adding 4
     wire [31:0] PC4_D_X, PC4_X_M, PC4_M_W, PC4_W_F; // after adding 4
