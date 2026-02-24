@@ -29,6 +29,7 @@ module execute(
     input wire i_Jump,
     input wire i_BranchEqual,
     input wire i_BranchLT,
+    input wire i_Branch,
     input wire i_MemRead,
     input wire i_MemtoReg,
     input wire i_MemWrite,
@@ -41,6 +42,7 @@ module execute(
     output wire o_Jump,
     output wire o_BranchEqual,
     output wire o_BranchLT,
+    output wire o_Branch,
     output wire o_MemRead,
     output wire o_MemtoReg,
     output wire o_MemWrite,
@@ -94,6 +96,7 @@ module execute(
     assign o_Jump = i_Jump;
     assign o_BranchEqual = i_BranchEqual;
     assign o_BranchLT = i_BranchLT;
+    assign o_Branch = i_Branch;
     assign o_MemRead = i_MemRead;
     assign o_MemtoReg = i_MemtoReg;
     assign o_MemWrite = i_MemWrite;

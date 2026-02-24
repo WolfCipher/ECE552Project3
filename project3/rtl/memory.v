@@ -23,6 +23,7 @@ module memory(
     input wire i_Jump,
     input wire i_BranchEqual,
     input wire i_BranchLT,
+    input wire i_Branch,
     input wire i_MemRead,
     input wire i_MemtoReg,
     input wire i_MemWrite,
@@ -42,7 +43,7 @@ module memory(
     wire muxed_target;
     assign muxed_target = i_isJALR ? {target_addr[31:1], 1'b0} : target_addr;
 
-    assign o_PC = (i_BranchEqual & i_eq) | (i_BranchLT & i_slt) | (i_Jump) ? muxed_target : i_PC;
+    assign o_PC = (((i_BranchEqual & i_eq) | (i_BranchLT & i_slt)) & Branch) | (i_Jump) ? muxed_target : i_PC;
 
     // read and write data TODO
     //data_memory dmem (i_clk, i_mask, i_unsigned, i_MemRead, i_MemWrite, i_mem_addr, i_reg2, i_MemtoR)
