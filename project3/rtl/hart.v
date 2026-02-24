@@ -155,7 +155,7 @@ module hart #(
     // Destination Address
     wire [4:0] rd_waddr_D_X, rd_waddr_X_M, rd_waddr_M_W;
 
-    //register access signals
+    // register access signals
     wire i_reg_write_en, i_reg_write_addr, i_reg_write_data;
 
     // ALU result, U type result, memory result
@@ -255,7 +255,21 @@ module hart #(
         rd_waddr_X_M, RegWrite_X_M, IsUInstruct_X_M,
         uimm_X_M,
         // output Mux signals
-        isJALR_M_W, MemtoReg_M_W, rd_waddr_M_W, RegWrite_M_W, IsUInstruct_M_W
+        Jump_M_W, MemtoReg_M_W, rd_waddr_M_W, RegWrite_M_W, IsUInstruct_M_W
+    );
+
+    writeback w (
+        PC4_M_W,
+        // results to choose between
+        mem_read_M_W, ALU_M_W, uimm_M_W,
+        i_reg_write_data,
+        o_retire_next_pc,
+        // input mux signals
+        Jump_M_W, MemtoReg_M_W, rd_waddr_M_W,
+        RegWrite_M_W, IsUInstruct_M_W,
+        // output signals
+        i_reg_write_en,
+        i_reg_write_addr
     );
 
 endmodule

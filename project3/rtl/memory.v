@@ -31,7 +31,7 @@ module memory(
     input wire i_IsUInstruct,
     input wire [31:0] i_uimm,
     // output Mux signals
-    output wire o_isJALR,
+    output wire o_Jump,
     output wire o_MemtoReg,
     output wire [4:0] o_rd_waddr,
     output wire o_RegWrite,
@@ -49,7 +49,7 @@ module memory(
 
     // pass through stage
     assign read_alu = i_result;
-    assign o_isJALR = i_isJALR;
+    assign o_Jump = i_Jump;
     assign o_MemtoReg = i_MemtoReg;
     assign o_rd_waddr = i_rd_waddr;
     assign o_RegWrite = i_RegWrite;
