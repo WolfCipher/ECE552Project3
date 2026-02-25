@@ -196,8 +196,8 @@ module hart #(
     wire [31:0] instruction;    // never declared
 
     fetch #(RESET_ADDR) fetch_inst (
-        i_clk,
         i_rst,
+        i_clk,
         branch_target,
         branch_taken,
         pc,
