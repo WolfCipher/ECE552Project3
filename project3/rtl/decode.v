@@ -1,6 +1,7 @@
 
 module decode (
     input [31:0] instruction,
+    // output mux values
     output reg jump,
     output reg branch_eq,
     output reg branch_lt,
@@ -10,30 +11,60 @@ module decode (
     output reg mem_to_reg,
     output reg alu_src, //1 if reg 0 if imm
     output reg reg_write,
-    output reg [31:0] reg_data1,
-    output reg [31:0] reg_data2,
-    output reg [31:0] immediate,
+    // register and immediate values
+    output wire [31:0] reg_data1,
+    output wire [31:0] reg_data2,
+    output wire [31:0] immediate,
+    // ALU values
     output reg [2:0] i_opsel,
     output reg i_sub,
     output reg i_unsigned,
     output reg i_arith,
+    // when to write values
     input wire        i_clk,
     input wire        i_reg_write_en,
     input wire [4:0]  i_reg_write_addr,
     input wire [31:0] i_reg_write_data,
-    output halt // asserted if EBREAK
+    // retire instruction handling
+    output halt, // asserted if EBREAK
+    output wire [31:0] o_retire_instruction,
+    output wire trap,
+    output wire [4:0] rs1_raddr,
+    output wire [4:0] rs2_raddr,
+    output wire [31:0] rs1_rdata,
+    output wire [31:0] rs2_rdata,
+    output wire [4:0] rd_waddr,
+    output wire [31:0] rd_wdata
 );
 
+// handle retire values
 assign halt = instruction[6:0] == 7'b1110011;
+assign o_retire_instruction = instruction;
+assign rs1_raddr = instruction[19:15];
+assign rs2_raddr = instruction[24:20];
+assign rs1_rdata = (rs1_raddr == 5'd0) ? 32'd0 : reg_data1;
+assign rs2_rdata = (rs2_raddr == 5'd0) ? 32'd0 : reg_data2;
+assign rd_waddr = (i_reg_write_en) ? instruction[11:7] : 5'd0;
+assign rd_wdata = (i_reg_write_addr == 6'd0) ? 31'dx : i_reg_write_data;
 
 // register file
 reg [31:0] registers [0:31]; // array of 32 registers 32 bits wide --> represents all CPU regs
                              // will get values from the writeback stage
 
-always @(*) begin
-    reg_data1 = (instruction[19:15] == 5'b0) ? 32'b0 : registers[instruction[19:15]]; //gives contents of reg at addr instruction[x:y]
-    reg_data2 = (instruction[24:20] == 5'b0) ? 32'b0 : registers[instruction[24:20]];
-end
+rf #(0) reg_file (
+    i_clk, i_rst,
+    // Register read port 1, with input address [0, 31] and output data.
+    instruction[19:15], reg_data1,
+    // Register read port 2, with input address [0, 31] and output data.
+    instruction[24:20], reg_data2,
+    // Write register enable, address [0, 31] and input data.
+    i_reg_write_en, i_reg_write_addr, i_reg_write_data
+);
+
+// always @(*) begin
+//     reg_data1 = (instruction[19:15] == 5'b0) ? 32'b0 : registers[instruction[19:15]]; //gives contents of reg at addr instruction[x:y]
+//     reg_data2 = (instruction[24:20] == 5'b0) ? 32'b0 : registers[instruction[24:20]];
+// end
 
 
 //control file
@@ -82,6 +113,7 @@ assign format = (instruction[6:0] == 7'b0110011) ? 6'b000001 : // R-Type
                 (instruction[6:0] == 7'bxxx1xxx) ? 6'b100000 : // J-Type
                 6'b000000; // invalid instruction
 
+assign trap = (format == 6'b000000);
 
 imm i (instruction, format, immediate);
 // always @(*) begin

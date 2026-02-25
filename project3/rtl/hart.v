@@ -186,11 +186,6 @@ module hart #(
     // retired instruction pc
     assign o_retire_next_pc = pc;
 
-    // TODO:
-    // o_retire_instruct is computed in decode
-    // o_retire_halt is computed in decode
-    //
-
     // TODO take action if the retired instruction is valid
     // wire next_pc;
     // assign next_pc = o_retire_valid ? o_retire_next_pc : 32'd0; // TODO: what should default value be?
@@ -212,30 +207,25 @@ module hart #(
     );
 
 
-    decode decode (
+    decode d (
         i_imem_rdata,
-        Jump_D_X,
-        BranchEqual_D_X,
-        BranchLT_D_X,
-        Branch_D_X,
-        MemRead_D_X,
-        MemWrite_D_X,
-        MemtoReg_D_X,
+        // output mux values
+        Jump_D_X, BranchEqual_D_X, BranchLT_D_X, Branch_D_X,
+        MemRead_D_X, MemWrite_D_X, MemtoReg_D_X,
         ALUSrc_D_X, //1 if reg 0 if imm
         RegWrite_D_X,
-        reg1,
-        reg2,
-        imm,
-        i_opsel,
-        i_sub,
-        i_unsigned,
-        i_arith,
+        // register and immediate values
+        reg1, reg2, imm,
+        // ALU values
+        i_opsel, i_sub, i_unsigned, i_arith,
+        // when to write values
         i_clk,
-        i_reg_write_en,
-        i_reg_write_addr,
-        i_reg_write_data,
-        o_retire_halt
-
+        i_reg_write_en, i_reg_write_addr, i_reg_write_data,
+        // Retire instructions
+        o_retire_halt, o_retire_inst, trap_D,
+        o_retire_rs1_raddr, o_retire_rs2_raddr,
+        o_retire_rs1_rdata, o_retire_rs2_rdata,
+        o_retire_rd_waddr, o_retire_rd_wdata
     );
 
 
@@ -251,11 +241,11 @@ module hart #(
         mem_unsigned, o_dmem_mask, o_dmem_addr, o_dmem_wdata, reg2_X_M,
         // input mux signals
         ALUSrc_D_X, isJALR_D_X, Jump_D_X, BranchEqual_D_X, BranchLT_D_X, Branch_D_X,
-        MemRead_D_X, MemtoReg_D_X, o_dmem_wen, rd_waddr_D_X,
+        MemRead_D_X, MemtoReg_D_X, MemWrite_D_X, rd_waddr_D_X,
         RegWrite_D_X, UpperType_D_X, IsUInstruct_D_X,
         // output mux signals
         isJALR_X_M, Jump_X_M, BranchEqual_X_M, BranchLT_X_M, Branch_X_M,
-        MemRead_X_M, MemtoReg_X_M, MemWrite_X_M,
+        MemRead_X_M, MemtoReg_X_M, o_dmem_wen,
         rd_waddr_X_M, RegWrite_X_M, IsUInstruct_X_M,
         // U type result
         uimm_X_M,
