@@ -3,7 +3,6 @@ module fetch #(
     parameter RESET_ADDR = 32'h00000000
 ) (
     input i_rst, i_clk,
-	input [31:0] curr_addr,
 	input [31:0] branch_target,
 	input branch_taken,
 	input wire [31:0] i_imem_rdata, // data from mem

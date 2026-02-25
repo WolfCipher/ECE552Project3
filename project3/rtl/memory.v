@@ -42,7 +42,7 @@ module memory(
 );
 
     // determine PC
-    wire muxed_target;
+    wire [31:0] muxed_target;
     assign muxed_target = i_isJALR ? {target_addr[31:1], 1'b0} : target_addr;
 
     assign o_PC4 = (((i_BranchEqual & i_eq) | (i_BranchLT & i_slt)) & i_Branch) | (i_Jump) ? muxed_target : i_PC4;
