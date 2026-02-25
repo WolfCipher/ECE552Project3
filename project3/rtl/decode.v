@@ -24,7 +24,7 @@ module decode (
     output halt // asserted if EBREAK
 );
 
-assign halt = instuction[6:0] == 7'b1110011;
+assign halt = instruction[6:0] == 7'b1110011;
 
 // register file
 reg [31:0] registers [0:31]; // array of 32 registers 32 bits wide --> represents all CPU regs

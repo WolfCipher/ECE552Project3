@@ -156,7 +156,9 @@ module hart #(
     wire [4:0] rd_waddr_D_X, rd_waddr_X_M, rd_waddr_M_W;
 
     // register access signals
-    wire [4:0] i_reg_write_en, i_reg_write_addr, i_reg_write_data;
+    wire i_reg_write_en;
+    wire [4:0] i_reg_write_addr;
+    wire [31:0] i_reg_write_data;
 
     // ALU result, U type result, memory result
     wire [31:0] ALU_X_M, ALU_M_W;
@@ -206,7 +208,7 @@ module hart #(
         pc,
         i_imem_rdata,
         PC_F_D,
-        instruction,
+        instruction
     );
 
 

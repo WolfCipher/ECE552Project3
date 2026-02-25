@@ -78,7 +78,7 @@ module adder(
 );
     wire [31:0] flip_b;
     assign flip_b = i_b ^ {32{i_carry}};
-    assign o_sum = i_a + flip_b + i_carry;
+    assign o_sum = i_a + flip_b + {31'd0, i_carry};
 endmodule
 
 module sll(
@@ -126,10 +126,19 @@ module slt(
     input wire i_unsigned,
     output wire [31:0] result
 );
-    wire signed [31:0] a, b;
-    assign a = i_a;
-    assign b = i_b;
-    assign result = i_unsigned ? i_a < i_b : a < b;
+    wire a_sign, b_sign;
+    assign a_sign = i_a[31];
+    assign b_sign = i_b[31];
+
+    wire signed_less_than;
+    assign signed_less_than = (a_sign == b_sign) ?
+                                i_a < i_b :         // compare magnitude
+                                a_sign & ~b_sign;   // compare sign bits
+
+    wire intermediate;
+    assign intermediate = i_unsigned ? i_a < i_b : signed_less_than;
+
+    assign result = {31'd0, intermediate};
 endmodule
 
 module xor32(
