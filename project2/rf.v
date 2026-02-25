@@ -57,8 +57,38 @@ module rf #(
     always @(posedge i_clk) begin
         // handle active-high reset
         if (i_rst == 1) begin
-            for (i = 0; i < 32; i = i + 1)
-                reg_file[i] <= 32'd0;
+            reg_file[0] <= 32'd0;
+            reg_file[1] <= 32'd0;
+            reg_file[2] <= 32'd0;
+            reg_file[3] <= 32'd0;
+            reg_file[4] <= 32'd0;
+            reg_file[5] <= 32'd0;
+            reg_file[6] <= 32'd0;
+            reg_file[7] <= 32'd0;
+            reg_file[8] <= 32'd0;
+            reg_file[9] <= 32'd0;
+            reg_file[10] <= 32'd0;
+            reg_file[11] <= 32'd0;
+            reg_file[12] <= 32'd0;
+            reg_file[13] <= 32'd0;
+            reg_file[14] <= 32'd0;
+            reg_file[15] <= 32'd0;
+            reg_file[16] <= 32'd0;
+            reg_file[17] <= 32'd0;
+            reg_file[18] <= 32'd0;
+            reg_file[19] <= 32'd0;
+            reg_file[20] <= 32'd0;
+            reg_file[21] <= 32'd0;
+            reg_file[22] <= 32'd0;
+            reg_file[23] <= 32'd0;
+            reg_file[24] <= 32'd0;
+            reg_file[25] <= 32'd0;
+            reg_file[26] <= 32'd0; 
+            reg_file[27] <= 32'd0;
+            reg_file[28] <= 32'd0;
+            reg_file[29] <= 32'd0;
+            reg_file[30] <= 32'd0;
+            reg_file[31] <= 32'd0;
         end
 
         // only write if write enabled
