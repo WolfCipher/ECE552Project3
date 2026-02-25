@@ -34,8 +34,15 @@ module decode (
     output wire [31:0] rs1_rdata,
     output wire [31:0] rs2_rdata,
     output wire [4:0] rd_waddr,
-    output wire [31:0] rd_wdata
+    output wire [31:0] rd_wdata,
+    // PC values
+    input wire [31:0] i_PC,
+    output wire [31:0] o_PC,
+    output wire [31:0] o_PC4
 );
+
+assign o_PC = i_PC;
+assign o_PC4 = i_PC + 31'd4;
 
 // handle retire values
 assign halt = instruction[6:0] == 7'b1110011;
@@ -151,3 +158,4 @@ imm i (instruction, format, immediate);
 
 endmodule
 
+`default_nettype wire

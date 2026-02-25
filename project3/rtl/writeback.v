@@ -23,10 +23,11 @@ module writeback(
 
     // pass through stage - write back is handled via connections in hart
     // remember, writing occurs before reading in decode cycle
+    assign o_PC = i_PC;
     assign o_PC4 = i_PC4;
     assign o_RegWrite = i_RegWrite;
     assign o_rd_waddr = i_rd_waddr;
 
 endmodule
 
-//`default_nettype wire
+`default_nettype wire

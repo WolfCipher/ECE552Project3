@@ -131,8 +131,6 @@ module hart #(
 `endif
 );
 
-    wire [31:0] pc;
-
     // PC signals
     wire [31:0] PC_F_D, PC_D_X, PC_X_M, PC_M_W; // before adding 4
     wire [31:0] PC4_D_X, PC4_X_M, PC4_M_W, PC4_W_F; // after adding 4
@@ -184,7 +182,7 @@ module hart #(
     assign o_retire_trap = trap_D | trap_X;
 
     // retired instruction pc
-    assign o_retire_next_pc = pc;
+    assign o_retire_next_pc = PC4_W_F;
 
     // TODO take action if the retired instruction is valid
     // wire next_pc;
@@ -198,10 +196,9 @@ module hart #(
     fetch #(RESET_ADDR) fetch_inst (
         i_rst,
         i_clk,
-        branch_target,
-        branch_taken,
-        pc,
         i_imem_rdata,
+        PC4_W_F,
+        o_imem_raddr,
         PC_F_D,
         instruction
     );
@@ -225,7 +222,9 @@ module hart #(
         o_retire_halt, o_retire_inst, trap_D,
         o_retire_rs1_raddr, o_retire_rs2_raddr,
         o_retire_rs1_rdata, o_retire_rs2_rdata,
-        o_retire_rd_waddr, o_retire_rd_wdata
+        o_retire_rd_waddr, o_retire_rd_wdata,
+        // PC
+        PC_F_D, PC_D_X, PC4_D_X
     );
 
 
@@ -272,21 +271,44 @@ module hart #(
     );
 
 
+    // writeback w (
+    //     PC_M_W,
+    //     PC4_M_W,
+    //     // results to choose between
+    //     mem_read_M_W, ALU_M_W, uimm_M_W,
+    //     i_reg_write_data,
+    //     o_retire_pc,
+    //     PC4_W_F,
+    //     // input mux signals
+    //     Jump_M_W, MemtoReg_M_W, rd_waddr_M_W,
+    //     RegWrite_M_W, IsUInstruct_M_W,
+    //     // output signals
+    //     i_reg_write_en,
+    //     i_reg_write_addr
+    // );
+
     writeback w (
-        PC_M_W,
-        PC4_M_W,
-        // results to choose between
-        mem_read_M_W, ALU_M_W, uimm_M_W,
-        i_reg_write_data,
-        o_retire_pc,
-        pc,
-        // input mux signals
-        Jump_M_W, MemtoReg_M_W, rd_waddr_M_W,
-        RegWrite_M_W, IsUInstruct_M_W,
-        // output signals
-        i_reg_write_en,
-        i_reg_write_addr
-    );
+    .i_PC(PC_M_W),
+    .i_PC4(PC4_M_W),
+
+    .read_data(mem_read_M_W),
+    .read_alu(ALU_M_W),
+    .i_uimm(uimm_M_W),
+
+    .dest_result(i_reg_write_data),
+    .o_PC(o_retire_pc),
+    .o_PC4(PC4_W_F),     // ← NOW CORRECT
+
+    .i_isJALR(Jump_M_W),
+    .i_MemtoReg(MemtoReg_M_W),
+    .i_rd_waddr(rd_waddr_M_W),
+    .i_RegWrite(RegWrite_M_W),
+    .i_IsUInstruct(IsUInstruct_M_W),
+
+    .o_RegWrite(i_reg_write_en),
+    .o_rd_waddr(i_reg_write_addr)
+);
+
 
 endmodule
 

@@ -83,6 +83,9 @@ module hart_tb ();
         // Load the test program into memory at address 0.
         $display("Loading program.");
         $readmemh("01add.mem", imem); // CHANGE THE MEM NAME TO USE NEW FILE
+        $display("imem[0]=%02h %02h %02h %02h",
+         imem[0], imem[1], imem[2], imem[3]);
+
 
         // Reset the dut.
         $display("Resetting hart.");
