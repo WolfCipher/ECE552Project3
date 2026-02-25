@@ -21,7 +21,7 @@ module decode (
     output reg i_unsigned,
     output reg i_arith,
     // when to write values
-    input wire        i_clk,
+    input wire        i_clk, i_rst,
     input wire        i_reg_write_en,
     input wire [4:0]  i_reg_write_addr,
     input wire [31:0] i_reg_write_data,
@@ -55,7 +55,7 @@ assign rd_waddr = (i_reg_write_en) ? instruction[11:7] : 5'd0;
 assign rd_wdata = (i_reg_write_addr == 6'd0) ? 31'dx : i_reg_write_data;
 
 // register file
-reg [31:0] registers [0:31]; // array of 32 registers 32 bits wide --> represents all CPU regs
+//reg [31:0] registers [0:31]; // array of 32 registers 32 bits wide --> represents all CPU regs
                              // will get values from the writeback stage
 
 rf #(0) reg_file (
@@ -95,10 +95,10 @@ always @(*) begin
 end
 
 // for write back
-always @(posedge i_clk) begin
-    if (i_reg_write_en && i_reg_write_addr != 5'b0)
-        registers[i_reg_write_addr] <= i_reg_write_data;
-end
+// always @(posedge i_clk) begin
+//     if (i_reg_write_en && i_reg_write_addr != 5'b0)
+//         registers[i_reg_write_addr] <= i_reg_write_data;
+// end
 
 // choose immediate
 

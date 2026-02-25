@@ -216,7 +216,7 @@ module hart #(
         // ALU values
         i_opsel, i_sub, i_unsigned, i_arith,
         // when to write values
-        i_clk,
+        i_clk, i_rst,
         i_reg_write_en, i_reg_write_addr, i_reg_write_data,
         // Retire instructions
         o_retire_halt, o_retire_inst, trap_D,
