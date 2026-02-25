@@ -25,20 +25,24 @@ module decode (
     input wire        i_reg_write_en,
     input wire [4:0]  i_reg_write_addr,
     input wire [31:0] i_reg_write_data,
+    // register addresses
+    output wire [4:0] rs1_raddr,
+    output wire [4:0] rs2_raddr,
     // retire instruction handling
     output halt, // asserted if EBREAK
     output wire [31:0] o_retire_instruction,
     output wire trap,
-    output wire [4:0] rs1_raddr,
-    output wire [4:0] rs2_raddr,
     output wire [31:0] rs1_rdata,
     output wire [31:0] rs2_rdata,
-    output wire [4:0] rd_waddr,
-    output wire [31:0] rd_wdata,
+    // output wire [4:0] rd_waddr,
+    // output wire [31:0] rd_wdata,
     // PC values
     input wire [31:0] i_PC,
     output wire [31:0] o_PC,
-    output wire [31:0] o_PC4
+    output wire [31:0] o_PC4,
+    // pass RegWrite
+    output wire o_RegWrite,
+    output wire [4:0] o_rd_waddr
 );
 
 assign o_PC = i_PC;
@@ -51,22 +55,12 @@ assign rs1_raddr = instruction[19:15];
 assign rs2_raddr = instruction[24:20];
 assign rs1_rdata = (rs1_raddr == 5'd0) ? 32'd0 : reg_data1;
 assign rs2_rdata = (rs2_raddr == 5'd0) ? 32'd0 : reg_data2;
-assign rd_waddr = (i_reg_write_en) ? instruction[11:7] : 5'd0;
-assign rd_wdata = (i_reg_write_addr == 6'd0) ? 31'dx : i_reg_write_data;
+assign rd_waddr = i_reg_write_addr; //(i_reg_write_en) ? i_reg_write_addr : 5'd0;
+assign rd_wdata = i_reg_write_data; //(i_reg_write_addr == 5'd0) ? 32'dx : i_reg_write_data;
 
 // register file
 //reg [31:0] registers [0:31]; // array of 32 registers 32 bits wide --> represents all CPU regs
                              // will get values from the writeback stage
-
-rf #(0) reg_file (
-    i_clk, i_rst,
-    // Register read port 1, with input address [0, 31] and output data.
-    instruction[19:15], reg_data1,
-    // Register read port 2, with input address [0, 31] and output data.
-    instruction[24:20], reg_data2,
-    // Write register enable, address [0, 31] and input data.
-    i_reg_write_en, i_reg_write_addr, i_reg_write_data
-);
 
 // always @(*) begin
 //     reg_data1 = (instruction[19:15] == 5'b0) ? 32'b0 : registers[instruction[19:15]]; //gives contents of reg at addr instruction[x:y]
@@ -155,6 +149,9 @@ imm i (instruction, format, immediate);
 
 //
 
+// handle future register write
+assign o_RegWrite = ((format == 6'b000100) || (format == 6'b001000)) ? 0 : 1;
+assign o_rd_waddr = instruction[11:7];
 
 endmodule
 

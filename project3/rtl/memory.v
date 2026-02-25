@@ -38,7 +38,10 @@ module memory(
     output wire o_MemtoReg,
     output wire [4:0] o_rd_waddr,
     output wire o_RegWrite,
-    output wire o_IsUInstruct
+    output wire o_IsUInstruct,
+    // dmem
+    input wire [31:0] i_dmem_rdata,
+    output wire o_dmem_ren
 );
 
     // determine PC
@@ -46,6 +49,9 @@ module memory(
     assign muxed_target = i_isJALR ? {target_addr[31:1], 1'b0} : target_addr;
 
     assign o_PC4 = (((i_BranchEqual & i_eq) | (i_BranchLT & i_slt)) & i_Branch) | (i_Jump) ? muxed_target : i_PC4;
+
+    // dmem
+    assign o_dmem_ren = i_MemRead;
 
     // read and write data TODO
     //data_memory dmem (i_clk, i_mask, i_unsigned, i_MemRead, i_MemWrite, i_mem_addr, i_reg2, i_MemtoR)
@@ -59,6 +65,7 @@ module memory(
     assign o_RegWrite = i_RegWrite;
     assign o_IsUInstruct = i_IsUInstruct;
     assign o_uimm = i_uimm;
+    assign read_data = i_dmem_rdata;
 
 endmodule
 

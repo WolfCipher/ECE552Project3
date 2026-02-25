@@ -157,6 +157,7 @@ module hart #(
     wire i_reg_write_en;
     wire [4:0] i_reg_write_addr;
     wire [31:0] i_reg_write_data;
+    wire [4:0] rs1_raddr, rs2_raddr;
 
     // ALU result, U type result, memory result
     wire [31:0] ALU_X_M, ALU_M_W;
@@ -176,13 +177,16 @@ module hart #(
     // **** HANDLE RETIRE *******
     // for single-cycle implementations, o_retire_valid will always be 1
     assign o_retire_valid = 1;
-    
     // check for traps in stages where we can find a bad instruction and bad addresses
     wire trap_D, trap_X;
     assign o_retire_trap = trap_D | trap_X;
-
     // retired instruction pc
     assign o_retire_next_pc = PC4_W_F;
+    // register addresses
+    assign o_retire_rs1_raddr = rs1_raddr;
+    assign o_retire_rs2_raddr = rs2_raddr;
+    assign o_retire_rd_waddr = i_reg_write_addr;
+    assign o_retire_rd_wdata = i_reg_write_data;
 
     // TODO take action if the retired instruction is valid
     // wire next_pc;
@@ -192,6 +196,16 @@ module hart #(
     wire [31:0] branch_target;  // never declared
     wire        branch_taken;   // never declared
     wire [31:0] instruction;    // never declared
+
+    rf #(0) reg_file (
+        i_clk, i_rst,
+        // Register read port 1, with input address [0, 31] and output data.
+        rs1_raddr, reg1,
+        // Register read port 2, with input address [0, 31] and output data.
+        rs2_raddr, reg2,
+        // Write register enable, address [0, 31] and input data.
+        i_reg_write_en, i_reg_write_addr, i_reg_write_data
+    );
 
     fetch #(RESET_ADDR) fetch_inst (
         i_rst,
@@ -218,13 +232,16 @@ module hart #(
         // when to write values
         i_clk, i_rst,
         i_reg_write_en, i_reg_write_addr, i_reg_write_data,
+        // Register accesses
+        rs1_raddr, rs2_raddr,
         // Retire instructions
         o_retire_halt, o_retire_inst, trap_D,
-        o_retire_rs1_raddr, o_retire_rs2_raddr,
         o_retire_rs1_rdata, o_retire_rs2_rdata,
-        o_retire_rd_waddr, o_retire_rd_wdata,
+        //o_retire_rd_waddr, o_retire_rd_wdata,
         // PC
-        PC_F_D, PC_D_X, PC4_D_X
+        PC_F_D, PC_D_X, PC4_D_X,
+        // pass RegWrite
+        RegWrite_D_X, rd_waddr_D_X
     );
 
 
@@ -267,47 +284,64 @@ module hart #(
         rd_waddr_X_M, RegWrite_X_M, IsUInstruct_X_M,
         uimm_X_M,
         // output Mux signals
-        Jump_M_W, MemtoReg_M_W, rd_waddr_M_W, RegWrite_M_W, IsUInstruct_M_W
+        Jump_M_W, MemtoReg_M_W, rd_waddr_M_W, RegWrite_M_W, IsUInstruct_M_W,
+        // dmem
+        i_dmem_rdata, o_dmem_ren
     );
 
 
-    // writeback w (
-    //     PC_M_W,
-    //     PC4_M_W,
-    //     // results to choose between
-    //     mem_read_M_W, ALU_M_W, uimm_M_W,
-    //     i_reg_write_data,
-    //     o_retire_pc,
-    //     PC4_W_F,
-    //     // input mux signals
-    //     Jump_M_W, MemtoReg_M_W, rd_waddr_M_W,
-    //     RegWrite_M_W, IsUInstruct_M_W,
-    //     // output signals
-    //     i_reg_write_en,
-    //     i_reg_write_addr
-    // );
-
     writeback w (
-    .i_PC(PC_M_W),
-    .i_PC4(PC4_M_W),
+        PC_M_W,
+        PC4_M_W,
+        // results to choose between
+        mem_read_M_W, ALU_M_W, uimm_M_W,
+        i_reg_write_data,
+        o_retire_pc,
+        PC4_W_F,
+        // input mux signals
+        Jump_M_W, MemtoReg_M_W, rd_waddr_M_W,
+        RegWrite_M_W, IsUInstruct_M_W,
+        // output signals
+        i_reg_write_en,
+        i_reg_write_addr
+    );
 
-    .read_data(mem_read_M_W),
-    .read_alu(ALU_M_W),
-    .i_uimm(uimm_M_W),
+    // TEST
+    // rd address
+assign rd_waddr_D_X = instruction[11:7];
+assign rd_waddr_X_M = rd_waddr_D_X;
+assign rd_waddr_M_W = rd_waddr_X_M;
 
-    .dest_result(i_reg_write_data),
-    .o_PC(o_retire_pc),
-    .o_PC4(PC4_W_F),     // ← NOW CORRECT
+// RegWrite
+assign RegWrite_X_M = RegWrite_D_X;
+assign RegWrite_M_W = RegWrite_X_M;
 
-    .i_isJALR(Jump_M_W),
-    .i_MemtoReg(MemtoReg_M_W),
-    .i_rd_waddr(rd_waddr_M_W),
-    .i_RegWrite(RegWrite_M_W),
-    .i_IsUInstruct(IsUInstruct_M_W),
+// MemtoReg
+assign MemtoReg_X_M = MemtoReg_D_X;
+assign MemtoReg_M_W = MemtoReg_X_M;
 
-    .o_RegWrite(i_reg_write_en),
-    .o_rd_waddr(i_reg_write_addr)
-);
+// IsUInstruct
+assign IsUInstruct_X_M = IsUInstruct_D_X;
+assign IsUInstruct_M_W = IsUInstruct_X_M;
+
+// Jump
+assign Jump_X_M = Jump_D_X;
+assign Jump_M_W = Jump_X_M;
+
+// Branch signals
+assign BranchEqual_X_M = BranchEqual_D_X;
+assign BranchLT_X_M    = BranchLT_D_X;
+assign Branch_X_M      = Branch_D_X;
+
+// PC pipeline (optional but clean)
+assign PC_D_X  = PC_F_D;
+assign PC_X_M  = PC_D_X;
+assign PC_M_W  = PC_X_M;
+
+assign PC4_D_X = PC_F_D + 4;
+assign PC4_X_M = PC4_D_X;
+assign PC4_M_W = PC4_X_M;
+
 
 
 endmodule
