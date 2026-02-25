@@ -16,12 +16,13 @@ module execute(
     output wire o_eq,
     output wire o_slt,
     output wire [31:0] target_addr,
+    output wire [31:0] o_PC,
     output wire [31:0] o_PC4,
     // signals for proper memory access
     output wire o_unsigned, // for memory
     output wire [3:0] o_mask, // for memory
     output wire [31:0] mem_addr, // for memory; different from o_result if not working with a word
-    output wire [31:0] mem_wdata
+    output wire [31:0] mem_wdata,
     output wire [31:0] o_reg2,
     // input mux signals
     input wire i_ALUSrc,
@@ -38,7 +39,7 @@ module execute(
     input wire i_UpperType,
     input wire i_IsUInstruct,
     // output mux signals
-    output wire i_isJALR,
+    output wire o_isJALR,
     output wire o_Jump,
     output wire o_BranchEqual,
     output wire o_BranchLT,
@@ -84,13 +85,14 @@ module execute(
                         //(o_result[1:0] == 2'b11) ? 4'b1001 :
                         4'bxxxx
                     ) : // halfword
-                    4'b1111 // word
+                    4'b1111; // word
     assign mem_addr = {o_result[31:2], 2'b00};
 
     // trap check
     assign o_trap = (mem_addr[1:0] != 2'b00) || (target_addr != 2'b00);
 
     // pass through stage
+    assign o_PC = i_PC;
     assign o_PC4 = i_PC4;
     assign o_isJALR = i_isJALR;
     assign o_Jump = i_Jump;

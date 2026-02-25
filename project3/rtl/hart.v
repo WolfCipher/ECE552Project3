@@ -134,7 +134,7 @@ module hart #(
     wire [31:0] pc;
 
     // PC signals
-    wire [31:0] PC_F_D, PC_D_X; // before adding 4
+    wire [31:0] PC_F_D, PC_D_X, PC_X_M, PC_M_W; // before adding 4
     wire [31:0] PC4_D_X, PC4_X_M, PC4_M_W, PC4_W_F; // after adding 4
     wire [31:0] target_addr_X_M; // PC + target_addr
 
@@ -210,7 +210,7 @@ module hart #(
     );
 
 
-    decode x (
+    decode decode (
         i_imem_rdata,
         Jump_D_X,
         BranchEqual_D_X,
@@ -231,7 +231,8 @@ module hart #(
         i_clk,
         i_reg_write_en,
         i_reg_write_addr,
-        i_reg_write_data
+        i_reg_write_data,
+        o_retire_halt
 
     );
 
@@ -243,7 +244,7 @@ module hart #(
         // ALU inputs
         reg1, reg2, imm, i_opsel, i_sub, i_unsigned, i_arith,
         // signals related to PC, branch, and ALU
-        PC_D_X, PC4_D_X, ALU_X_M, eq, slt, target_addr_X_M, PC4_X_M,
+        PC_D_X, PC4_D_X, ALU_X_M, eq, slt, target_addr_X_M, PC_X_M, PC4_X_M,
         // signals for proper memory access
         mem_unsigned, o_dmem_mask, o_dmem_addr, o_dmem_wdata, reg2_X_M,
         // input mux signals
@@ -266,7 +267,7 @@ module hart #(
         // ALU signal
         ALU_X_M,
         // Branch and PC signals
-        eq, slt, target_addr_X_M, PC4_X_M, PC4_M_W,
+        eq, slt, target_addr_X_M, PC_X_M, PC4_X_M, PC_M_W, PC4_M_W,
         // Results to choose between in WB stage
         mem_read_M_W, ALU_M_W, uimm_M_W,
         // input Mux signals
@@ -280,10 +281,12 @@ module hart #(
 
 
     writeback w (
+        PC_M_W,
         PC4_M_W,
         // results to choose between
         mem_read_M_W, ALU_M_W, uimm_M_W,
         i_reg_write_data,
+        o_retire_pc,
         pc,
         // input mux signals
         Jump_M_W, MemtoReg_M_W, rd_waddr_M_W,

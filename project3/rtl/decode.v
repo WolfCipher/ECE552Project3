@@ -20,9 +20,11 @@ module decode (
     input wire        i_clk,
     input wire        i_reg_write_en,
     input wire [4:0]  i_reg_write_addr,
-    input wire [31:0] i_reg_write_data
+    input wire [31:0] i_reg_write_data,
+    output halt // asserted if EBREAK
 );
 
+assign halt = instuction[6:0] == 7'b1110011;
 
 // register file
 reg [31:0] registers [0:31]; // array of 32 registers 32 bits wide --> represents all CPU regs
